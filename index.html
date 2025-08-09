@@ -1,656 +1,794 @@
-
-  
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-  <title>Anonymous Chat App – OnlineWebChat</title>
-
+  <title>Anonymous Chat App by ydvkundan2005 – No Login Needed | OnlineWebChat</title>
   <style>
-    /* (kept styles similar to your original - trimmed comments) */
-    html, body { height:100%; width:100%; margin:0; padding:0; padding-top:10px; font-family:'Segoe UI',sans-serif; background:linear-gradient(to right,#c9a27e,#6b4c3b); color:#fff; }
-    body > section { flex:1 1 auto; width:100%; max-width:640px; margin:0 auto; padding:20px; box-sizing:border-box; background: rgba(255,255,255,0.08); backdrop-filter: blur(4px); border-radius:12px; }
-    h1,h2,h3{ margin:0 0 12px 0;}
-    .note{ color:#fff; font-size:14px; margin:10px 0 20px; }
-    input{ width:100%; max-width:320px; padding:12px 15px; margin:10px auto; border-radius:8px; border:none; background:#f5e0c3; color:#333; box-sizing:border-box; }
-    button{ width:100%; max-width:320px; padding:12px 15px; margin:10px auto; border-radius:8px; border:none; background:#8b5e3c; color:#fff; cursor:pointer; }
-    #friendList{ max-height:368px; overflow-y:auto; padding:10px; width:100%; max-width:640px; margin:20px auto 0; box-sizing:border-box; }
-    #friendList div{ background: rgba(255,255,255,0.12); padding:18px; margin:12px auto; border-radius:20px; cursor:pointer; font-weight:700; text-align:center; }
-    #chatMessages{ height:380px; overflow-y:auto; background: rgba(255,255,255,0.06); padding:10px; border-radius:8px; margin:10px 0; color:#fff;}
-    #chatMessages div{ margin:8px 0; padding:10px 14px; border-radius:12px; max-width:60%; word-wrap:break-word; }
-    #chatMessages .me{ background:#8b5e3c; margin-left:auto; text-align:right; }
-    #chatMessages .friend{ background:#6b4c3b; margin-right:auto; text-align:left; }
-    .call-bar{ display:flex; max-width:640px; margin:10px auto; gap:8px; }
-    .call-half{ flex:1; padding:10px; background: rgba(0,0,0,0.12); border-radius:8px; display:flex; justify-content:center; align-items:center; gap:8px; cursor:pointer; }
-    #callPreview{ display:none; max-width:640px; margin:10px auto; padding:8px; background:rgba(0,0,0,0.08); border-radius:8px; position:relative; }
-    #callPreview video{ width:48%; height:180px; background:#000; display:inline-block; border-radius:8px; }
-    .hang-btn{ position:absolute; left:50%; transform:translateX(-50%); bottom:-24px; background:#b83b3b; width:56px; height:56px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#fff; cursor:pointer; border:6px solid rgba(255,255,255,0.08); }
-    #incomingModal{ display:none; position:fixed; left:50%; top:30%; transform:translate(-50%,-30%); background:rgba(0,0,0,0.85); color:#fff; padding:14px; border-radius:8px; z-index:9999; text-align:center;}
-    @media (max-width:480px){ #callPreview video{ display:block; width:100%; height:220px; margin-bottom:8px; } }
+    /* Your existing styles (unchanged) + a few minimal additions for call UI */
+    html, body {
+      height: 100%;
+      width: 100%;
+      margin: 0;
+      padding: 0;
+      padding-top: 10px;
+      overflow-x: hidden;
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(to right, #c9a27e, #6b4c3b);
+      color: #333;
+      display: flex;
+      flex-direction: column;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+    body > section {
+      flex: 1 1 auto;
+      width: 100%;
+      max-width: 640px;
+      margin: 0 auto;
+      padding: 20px;
+      box-sizing: border-box;
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(5px);
+      border-radius: 12px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.15);
+      text-align: center;
+      color: #fff;
+    }
+    h1, h2, h3 { margin: 0 0 15px 0; font-weight: 700; color: #fff; }
+    .note { color: #fff; font-size: 14px; margin: 10px 0 20px; }
+    input { width: 100%; max-width: 320px; padding: 12px 15px; margin: 10px auto; font-size: 16px; border-radius: 8px; border: none; background: #f5e0c3; color: #333; box-sizing: border-box; transition: box-shadow 0.3s ease; }
+    input:focus { outline: none; box-shadow: 0 0 8px 2px #8b5e3c; }
+    button { width: 100%; max-width: 320px; padding: 12px 15px; margin: 10px auto; font-size: 16px; border-radius: 8px; border: none; background-color: #8b5e3c; color: #fff; cursor: pointer; transition: background-color 0.3s ease, transform 0.2s ease; box-sizing: border-box; }
+    button:hover { background-color: #6b4c3b; transform: scale(1.05); }
+    button:active { transform: scale(0.95); }
+    .tick { font-size: 80px; color: #fff; margin: 20px 0; }
+    #friendList { max-height: 368px; overflow-y: auto; padding: 10px; width: 100%; max-width: 640px; margin: 20px auto 0 auto; box-sizing: border-box; color: #fff; }
+    #friendList div { background: rgba(255, 255, 255, 0.15); padding: 22px 35px; margin:15px auto; max-width: 600px; border-radius: 30px; cursor: pointer; transition: background-color 0.3s ease; color: #fff; user-select: none; text-align: center; font-weight: 700; }
+    #friendList div:hover { background: rgba(255, 255, 255, 0.3); }
+    #chatMessages { height: 500px; overflow-y: auto; background: rgba(255, 255, 255, 0.1); padding: 10px; margin: -6px 0; border-radius: 8px; border: none; box-sizing: border-box; scroll-behavior: smooth; color: #fff; }
+    #chatMessages div { margin: 8px 0; padding: 10px 14px; border-radius: 15px; max-width: 60%; word-wrap: break-word; font-size: 16px; line-height: 1.3; box-sizing: border-box; }
+    #chatMessages .me { background-color: #8b5e3c; color: #fff; margin-left: auto; text-align: right; border-bottom-right-radius: 0; }
+    #chatMessages .friend { background-color: #6b4c3b; color: #fff; margin-right: auto; text-align: left; border-bottom-left-radius: 0; }
+    #chatPage > div:first-child { display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.15); color: #fff; font-weight: 700; border-radius: 8px; padding: 12px 20px; max-width: 640px; margin: 0 auto; box-sizing: border-box; }
+    #chatPage > div:first-child button { max-width: 100px; background-color: #8b5e3c; padding: 6px 12px; font-weight: 600; border-radius: 6px; }
+    #chatPage > div:first-child button:hover { background-color: #6b4c3b; }
+    #addFriendSection { margin-top: 15px; }
+    #chatView { max-width: 640px; margin: 20px auto 40px auto; box-sizing: border-box; background: rgba(255, 255, 255, 0.1); padding: 9px; border-radius: 12px; backdrop-filter: blur(5px); color: #fff; }
+    #chatView > div:first-child { display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.15); padding: 10px; border-radius: 8px; margin-bottom: 10px; color: #fff; font-weight: 600; }
+    #chatView > div:first-child button { background-color: #8b5e3c; padding: 6px 12px; border-radius: 6px; font-weight: 600; border: none; color: #fff; cursor: pointer; transition: background-color 0.3s ease; }
+    #chatView > div:first-child button:hover { background-color: #6b4c3b; }
+    #messageInput { width: calc(100% - 100px); max-width: calc(320px - 100px); padding: 12px 15px; border-radius: 8px; border: none; background: #f5e0c3; color: #333; font-size: 16px; box-sizing: border-box; vertical-align: middle; margin-right: 10px; }
+    #chatView > input, #chatView > button { display: inline-block; vertical-align: middle; }
+    #chatView > button { width: 80px; max-width: 80px; padding: 12px 0; background-color: #8b5e3c; color: #fff; border-radius: 8px; border: none; cursor: pointer; font-weight: 600; transition: background-color 0.3s ease, transform 0.2s ease; }
+    #chatView > button:hover { background-color: #6b4c3b; transform: scale(1.05); }
+    #chatView > button:active { transform: scale(0.95); }
+    #nicknamePage button[style], #loginPage button[style] { background-color: #888 !important; max-width: 320px; margin-top: 30px; }
+    #loading { font-size: 16px; color: #fff; margin: 10px 0; }
+    #generatedId { width: 100%; max-width: 320px; padding: 10px 15px; border-radius: 8px; border: none; background: #f5e0c3; color: #333; margin-bottom: 20px; box-sizing: border-box; }
+
+    /* Call UI specifics */
+    .call-bar {
+      display:flex;
+      width:100%;
+      max-width:640px;
+      margin: 10px auto;
+      border-radius:8px;
+      overflow:hidden;
+      box-sizing:border-box;
+    }
+    .call-half {
+      flex:1;
+      padding:10px 0;
+      cursor:pointer;
+      user-select:none;
+      background: rgba(0,0,0,0.12);
+      color: #fff;
+      font-weight:700;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      gap:8px;
+    }
+    .call-half:hover { background: rgba(0,0,0,0.18); }
+    .call-icon { font-size:18px; }
+    #callPreview {
+      display:none;
+      max-width:640px;
+      margin:10px auto;
+      background: rgba(0,0,0,0.12);
+      padding:8px;
+      border-radius:8px;
+      box-sizing:border-box;
+      position:relative;
+    }
+    #callPreviewVideoLocal, #callPreviewVideoRemote {
+      width:48%;
+      height:180px;
+      background:#000;
+      border-radius:8px;
+      display:inline-block;
+      vertical-align:top;
+    }
+    #callPreviewAudioLocal, #callPreviewAudioRemote { display:none; }
+    .hang-btn {
+      position:absolute;
+      left:50%;
+      transform: translateX(-50%);
+      bottom: -22px;
+      background:#b83b3b;
+      width:56px;
+      height:56px;
+      border-radius:50%;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      color:#fff;
+      font-weight:700;
+      cursor:pointer;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      border:6px solid rgba(255,255,255,0.12);
+    }
+    #incomingModal {
+      display:none;
+      position:fixed;
+      left:50%;
+      top:30%;
+      transform:translate(-50%,-30%);
+      background: rgba(0,0,0,0.85);
+      color:#fff;
+      padding:16px;
+      border-radius:8px;
+      z-index:9999;
+      text-align:center;
+    }
+    #incomingModal button { width:auto; margin:8px; padding:8px 12px; border-radius:6px; }
+    @media (width: 480px) {
+      #callPreviewVideoLocal, #callPreviewVideoRemote { width:100%; height:220px; display:block; margin-bottom:8px; }
+    }
   </style>
+
+  <!-- small safe global stubs for immediate onclick availability -->
+  <script>
+    function showLanding(){
+      try {
+        document.getElementById("landing").style.display = "block";
+        document.getElementById("nicknamePage").style.display = "none";
+        document.getElementById("successPage").style.display = "none";
+        document.getElementById("loginPage").style.display = "none";
+        document.getElementById("chatPage").style.display = "none";
+      } catch(e){}
+    }
+    function showNicknamePage(){
+      try {
+        document.getElementById("landing").style.display = "none";
+        document.getElementById("nicknamePage").style.display = "block";
+        document.getElementById("nicknameInput").value = "";
+        document.getElementById("loading").style.display = "none";
+        document.getElementById("generatedDetails").style.display = "none";
+        document.getElementById("generatedId").value = "";
+        document.getElementById("createPassword").value = "";
+      } catch(e){}
+    }
+    function showLoginPage(){
+      try {
+        document.getElementById("landing").style.display = "none";
+        document.getElementById("loginPage").style.display = "block";
+        document.getElementById("loginId").value = "";
+        document.getElementById("loginPassword").value = "";
+      } catch(e){}
+    }
+  </script>
 </head>
 <body>
-  <!-- Landing -->
-  <section id="landing">
-    <h1 id="typingHeading"></h1>
-    <p class="note">No Gmail or number needed. Tap Create Account, enter Nickname, start chatting.</p>
+
+<!-- Landing Page -->
+<section id="landing">
+  <h1 class="typing-text" id="typingHeading"></h1>
+  <div class="button-container">
+    <p class="note">No Gmail or number needed. Just tap Create Account, enter Nickname, and start chatting.</p>
     <button onclick="showNicknamePage()">Create Account</button>
-    <p style="color:#fff;">or</p>
+    <p style="color: #fff;">or</p>
     <button onclick="showLoginPage()">Already Have Account</button>
-  </section>
+  </div>
+</section>
 
-  <!-- Nickname -->
-  <section id="nicknamePage" style="display:none;">
-    <h2>Enter your Nickname</h2>
-    <input id="nicknameInput" placeholder="Nickname"/>
-    <button onclick="generateUserId()">Done</button>
-    <div id="loading" style="display:none;">⏳ Generating ID...</div>
-    <div id="generatedDetails" style="display:none;">
-      <h3>Your ID</h3>
-      <input id="generatedId" readonly/>
-      <h3>Create Password</h3>
-      <input id="createPassword" type="password" placeholder="Password"/>
-      <button onclick="finalizeAccount()">Done</button>
-    </div>
-    <button onclick="showLanding()" style="background:#888;">Back</button>
-  </section>
+<!-- Nickname Page -->
+<section id="nicknamePage" style="display:none;">
+  <h2>Enter your Nickname</h2>
+  <input type="text" id="nicknameInput" placeholder="Nickname" autocomplete="off" />
+  <button onclick="generateUserId()">Done</button>
+  <div id="loading" style="display:none;">⏳ Wait, your ID is generating...</div>
+  <div id="generatedDetails" style="display:none;">
+    <h3>Your ID - Remember it</h3>
+    <input type="text" id="generatedId" readonly />
+    <h3>Create Password</h3>
+    <input type="password" id="createPassword" placeholder="Password" autocomplete="new-password" />
+    <button onclick="finalizeAccount()">Done</button>
+  </div>
+  <button onclick="showLanding()" style="margin-top:30px; background:#888;">Back</button>
+</section>
 
-  <!-- Success -->
-  <section id="successPage" style="display:none;">
-    <div class="tick">✅</div>
-    <h2>Your ID is Created</h2>
-    <button onclick="showLoginPage()">Now Login</button>
-  </section>
+<!-- Success Page -->
+<section id="successPage" style="display:none;">
+  <div class="tick">✅</div>
+  <h2>Your ID is Created</h2>
+  <button onclick="showLoginPage()">Now Login</button>
+</section>
 
-  <!-- Login -->
-  <section id="loginPage" style="display:none;">
-    <h2>Login</h2>
-    <input id="loginId" placeholder="Enter your ID" />
-    <input id="loginPassword" type="password" placeholder="Enter your Password" />
-    <button onclick="loginUser()">Login</button>
-    <p class="note">If you forget ID/password, create a new one.</p>
-    <button onclick="showLanding()" style="background:#888;">Back</button>
-  </section>
+<!-- Login Page -->
+<section id="loginPage" style="display:none;">
+  <h2>Login Your Account</h2>
+  <input type="text" id="loginId" placeholder="Enter your ID" autocomplete="off" />
+  <input type="password" id="loginPassword" placeholder="Enter your Password" autocomplete="current-password" />
+  <button onclick="loginUser()">Login</button>
+  <p class="note">Note: If you forget your ID/password, just create a new one. No Gmail needed.</p>
+  <button onclick="showLanding()" style="margin-top:30px; background:#888;">Back</button>
+</section>
 
-  <!-- Chat Page -->
-  <section id="chatPage" style="display:none;">
-    <div style="display:flex; justify-content:space-between; align-items:center; padding:10px; background:#c6a87d; border-radius:8px; max-width:640px; margin:0 auto;">
-      <div style="font-size:20px;">Your Friend</div>
-      <button onclick="toggleAddFriendSection()" style="background:#6f4e37;">Add</button>
-    </div>
-
-    <div id="addFriendSection" style="display:none; text-align:center; margin-top:10px;">
-      <input id="searchFriendId" placeholder="Enter Friend ID"/>
-      <button onclick="addFriend()">Add</button>
-    </div>
-
-    <div id="friendList"></div>
-
-    <div id="chatView" style="display:none; max-width:640px; margin:20px auto;">
-      <div style="display:flex; justify-content:space-between; align-items:center; background:#a9746e; padding:10px; border-radius:6px;">
-        <button onclick="backToFriendList()" style="background:#6f4e37;">← Back</button>
-        <div id="chatWith" style="flex:1; text-align:center;"></div>
-      </div>
-
-      <div class="call-bar" id="callBar">
-        <div class="call-half" id="audioCallHalf" title="Audio call">📞 Audio</div>
-        <div class="call-half" id="videoCallHalf" title="Video call">📹 Video</div>
-      </div>
-
-      <div id="callPreview">
-        <video id="callPreviewVideoLocal" autoplay muted playsinline></video>
-        <video id="callPreviewVideoRemote" autoplay playsinline></video>
-        <div class="hang-btn" id="hangupCallBtn" style="display:none;">✕</div>
-      </div>
-
-      <div id="chatMessages"></div>
-      <input id="messageInput" placeholder="Type your message..." />
-      <button onclick="sendMessage()">Send</button>
-    </div>
-  </section>
-
-  <!-- Incoming Modal -->
-  <div id="incomingModal">
-    <div id="incomingText">Incoming call...</div>
-    <div style="margin-top:10px;">
-      <button id="acceptCallBtn" style="background:#2e8b57">Accept</button>
-      <button id="rejectCallBtn" style="background:#b83b3b">Reject</button>
-    </div>
+<!-- Chat Page -->
+<section id="chatPage" style="display:none;">
+  <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 20px; background: #c6a87d; color: white; font-weight: bold; border-radius: 8px; max-width: 640px; margin: 0 auto;">
+    <div style="font-size: 20px;">Your Friend</div>
+    <button onclick="toggleAddFriendSection()" style="background: #6f4e37; color: white; border: none; padding: 6px 12px; border-radius: 4px;">Add</button>
   </div>
 
-  <!-- Firebase + App Logic -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-    import { getDatabase, ref, get, set, onValue, off, push, update, remove, onChildAdded } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+  <div id="addFriendSection" style="display:none; text-align: center; margin-top: 10px;">
+    <input type="text" id="searchFriendId" placeholder="Enter Friend ID" autocomplete="off" />
+    <button onclick="addFriend()">Add</button>
+  </div>
 
-    // ---------- Firebase config (keep your original keys) ----------
-    const firebaseConfig = {
-      apiKey: "AIzaSyA9pmgthHuuMCE5zq8VLlk8jvgjQjfESWU",
-      authDomain: "online-web-chat-22e51.firebaseapp.com",
-      databaseURL: "https://online-web-chat-22e51-default-rtdb.asia-southeast1.firebasedatabase.app",
-      projectId: "online-web-chat-22e51",
-      storageBucket: "online-web-chat-22e51.appspot.com",
-      messagingSenderId: "389702378019",
-      appId: "1:389702378019:web:b53f8d6621c47f8d2c8796",
-      measurementId: "G-M7SXNWGNRQ"
+  <div id="friendList" style="margin-top: 20px;"></div>
+
+  <div id="chatView" style="display:none; max-width: 640px; margin: 20px auto;">
+    <div style="display:flex; justify-content: space-between; align-items: center; background: #a9746e; padding: 10px; color: white; border-radius: 6px;">
+      <button onclick="backToFriendList()" style="background: #6f4e37; border: none; color: white; padding: 5px 10px; border-radius: 4px;">← Back</button>
+      <div id="chatWith" style="flex: 1; text-align: center;"></div>
+    </div>
+
+    <!-- call bar -->
+    <div class="call-bar" id="callBar">
+      <div class="call-half" id="audioCallHalf" title="Audio call">
+        <span class="call-icon">📞</span><span>Audio</span>
+      </div>
+      <div class="call-half" id="videoCallHalf" title="Video call">
+        <span class="call-icon">📹</span><span>Video</span>
+      </div>
+    </div>
+
+    <!-- preview -->
+    <div id="callPreview">
+      <video id="callPreviewVideoLocal" autoplay muted playsinline></video>
+      <video id="callPreviewVideoRemote" autoplay playsinline></video>
+      <audio id="callPreviewAudioLocal" autoplay muted></audio>
+      <audio id="callPreviewAudioRemote" autoplay></audio>
+      <div class="hang-btn" id="hangupCallBtn" title="Hang up" style="display:none;">✕</div>
+    </div>
+
+    <div id="chatMessages"></div>
+    <input type="text" id="messageInput" placeholder="Type your message..." autocomplete="off" />
+    <button onclick="sendMessage()">Send</button>
+  </div>
+</section>
+
+<!-- Incoming Call Modal -->
+<div id="incomingModal">
+  <div id="incomingText">Incoming call...</div>
+  <div style="margin-top:10px;">
+    <button id="acceptCallBtn" style="background:#2e8b57">Accept</button>
+    <button id="rejectCallBtn" style="background:#b83b3b">Reject</button>
+  </div>
+</div>
+
+<!-- Firebase + Call Logic -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+  import { getDatabase, ref, get, set, onValue, off, update, push, onChildAdded, remove } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+
+  // your firebase config (unchanged)
+  const firebaseConfig = {
+    apiKey: "AIzaSyA9pmgthHuuMCE5zq8VLlk8jvgjQjfESWU",
+    authDomain: "online-web-chat-22e51.firebaseapp.com",
+    databaseURL: "https://online-web-chat-22e51-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "online-web-chat-22e51",
+    storageBucket: "online-web-chat-22e51.appspot.com",
+    messagingSenderId: "389702378019",
+    appId: "1:389702378019:web:b53f8d6621c47f8d2c8796",
+    measurementId: "G-M7SXNWGNRQ"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+
+  // existing app variables
+  let currentUserId = "";
+  let currentChatFriend = "";
+  let friendsListener = null;
+  let messagesListener = null;
+
+  // calling variables
+  let pc = null;
+  let localStream = null;
+  let callType = null; // 'audio' or 'video'
+  const pcConfig = { iceServers: [{ urls: "stun:stun.l.google.com:19302" }] };
+
+  // call tracking
+  let currentCallId = null;
+  let incomingRef = null;         // incoming/<myId> global (keeps attached after login)
+  let answerRef = null;           // answers/<caller>/<callee> per-call
+  let remoteCandidatesRef = null; // candidates/<myId>/<peer> per-call
+  let callStatusRef = null;       // calls/<callId> per-call
+
+  // UI elements
+  const callBar = document.getElementById('callBar');
+  const audioCallHalf = document.getElementById('audioCallHalf');
+  const videoCallHalf = document.getElementById('videoCallHalf');
+  const callPreview = document.getElementById('callPreview');
+  const localVideoEl = document.getElementById('callPreviewVideoLocal');
+  const remoteVideoEl = document.getElementById('callPreviewVideoRemote');
+  const localAudioEl = document.getElementById('callPreviewAudioLocal');
+  const remoteAudioEl = document.getElementById('callPreviewAudioRemote');
+  const hangupCallBtn = document.getElementById('hangupCallBtn');
+  const incomingModal = document.getElementById('incomingModal');
+  const incomingText = document.getElementById('incomingText');
+  const acceptCallBtn = document.getElementById('acceptCallBtn');
+  const rejectCallBtn = document.getElementById('rejectCallBtn');
+
+  /* ------------------ App logic (kept same) ------------------ */
+  function showSection(id) {
+    ["landing", "nicknamePage", "successPage", "loginPage", "chatPage"].forEach(sid => {
+      document.getElementById(sid).style.display = sid === id ? "block" : "none";
+    });
+  }
+  window.showLanding = () => showSection("landing");
+  window.showNicknamePage = () => {
+    showSection("nicknamePage");
+    document.getElementById("nicknameInput").value = "";
+    document.getElementById("loading").style.display = "none";
+    document.getElementById("generatedDetails").style.display = "none";
+    document.getElementById("generatedId").value = "";
+    document.getElementById("createPassword").value = "";
+  };
+  window.showLoginPage = () => {
+    showSection("loginPage");
+    document.getElementById("loginId").value = "";
+    document.getElementById("loginPassword").value = "";
+  };
+
+  window.generateUserId = () => {
+    const nickname = document.getElementById("nicknameInput").value.trim();
+    if (!nickname) return alert("Please enter your nickname");
+    document.getElementById("loading").style.display = "block";
+    const firstLetter = nickname[0].toLowerCase();
+    const generateId = () => firstLetter + Math.floor(100 + Math.random() * 900);
+    const checkAndGenerateUniqueId = async () => {
+      let id = generateId();
+      let snap = await get(ref(db, "users/" + id));
+      while (snap.exists()) {
+        id = generateId();
+        snap = await get(ref(db, "users/" + id));
+      }
+      return id;
     };
+    checkAndGenerateUniqueId().then(id => {
+      setTimeout(() => {
+        document.getElementById("loading").style.display = "none";
+        document.getElementById("generatedDetails").style.display = "block";
+        document.getElementById("generatedId").value = id;
+      }, 700);
+    });
+  };
 
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
+  window.finalizeAccount = async () => {
+    const id = document.getElementById("generatedId").value.trim();
+    const password = document.getElementById("createPassword").value;
+    const nickname = document.getElementById("nicknameInput").value.trim();
+    if (!password) return alert("Please enter a password");
+    const userRef = ref(db, "users/" + id);
+    const snap = await get(userRef);
+    if (snap.exists()) { alert("ID already exists, try generating again"); return; }
+    await set(userRef, { password, nickname });
+    showSection("successPage");
+  };
 
-    // ---------- App state ----------
-    let currentUserId = "";
-    let currentChatFriend = "";
-    let friendsListener = null;
-    let messagesListener = null;
+  window.loginUser = async () => {
+    const id = document.getElementById("loginId").value.trim();
+    const password = document.getElementById("loginPassword").value;
+    if (!id || !password) return alert("Enter ID and password");
+    const userRef = ref(db, "users/" + id);
+    const snap = await get(userRef);
+    if (!snap.exists()) return alert("User ID not found");
+    const userData = snap.val();
+    if (userData.password !== password) return alert("Password incorrect");
+    currentUserId = id;
+    showSection("chatPage");
+    document.getElementById("friendList").style.display = "block";
+    document.getElementById("chatView").style.display = "none";
+    loadFriends();
+    // start a persistent incoming listener for this user
+    startIncomingListener();
+  };
 
-    // WebRTC / call state
-    let pc = null;
-    let localStream = null;
-    let callType = null; // 'audio' or 'video'
-    const pcConfig = { iceServers: [{ urls: "stun:stun.l.google.com:19302" }] };
+  window.toggleAddFriendSection = () => {
+    const sec = document.getElementById("addFriendSection");
+    sec.style.display = sec.style.display === "none" ? "block" : "none";
+  };
 
-    // Firebase refs that are per-call (we will create/cleanup them per call)
-    let incomingRef = null;   // permanent incoming listener ref (incoming/{currentUserId})
-    let answerRef = null;     // per-call answers/{callee}/{caller} or answers/{caller}/{callee}
-    let remoteCandidatesRef = null;
-    let localCandidatesRef = null;
-    let hangupRef = null;     // permanent hangup listener ref (hangup/{currentUserId})
+  window.addFriend = async () => {
+    const friendId = document.getElementById("searchFriendId").value.trim();
+    if (!friendId || friendId === currentUserId) return alert("Invalid Friend ID");
+    const friendRef = ref(db, "users/" + friendId);
+    const snap = await get(friendRef);
+    if (!snap.exists()) return alert("Friend not found");
+    await set(ref(db, `friends/${currentUserId}/${friendId}`), true);
+    await set(ref(db, `friends/${friendId}/${currentUserId}`), true);
+    alert("Friend added!");
+    document.getElementById("searchFriendId").value = "";
+    document.getElementById("addFriendSection").style.display = "none";
+    loadFriends();
+  };
 
-    // UI elements
-    const callBar = document.getElementById('callBar');
-    const audioCallHalf = document.getElementById('audioCallHalf');
-    const videoCallHalf = document.getElementById('videoCallHalf');
-    const callPreview = document.getElementById('callPreview');
-    const localVideoEl = document.getElementById('callPreviewVideoLocal');
-    const remoteVideoEl = document.getElementById('callPreviewVideoRemote');
-    const hangupCallBtn = document.getElementById('hangupCallBtn');
-    const incomingModal = document.getElementById('incomingModal');
-    const incomingText = document.getElementById('incomingText');
-    const acceptCallBtn = document.getElementById('acceptCallBtn');
-    const rejectCallBtn = document.getElementById('rejectCallBtn');
+  function loadFriends() {
+    const friendsRef = ref(db, `friends/${currentUserId}`);
+    if (friendsListener) { off(friendsRef); friendsListener = null; }
+    friendsListener = onValue(friendsRef, async snapshot => {
+      const friendListDiv = document.getElementById("friendList");
+      friendListDiv.innerHTML = "";
+      const friends = snapshot.val();
+      if (!friends) { friendListDiv.innerHTML = "<p>No friends yet. Add some!</p>"; return; }
+      for (const friendId in friends) {
+        const friendSnap = await get(ref(db, `users/${friendId}`));
+        const friendName = friendSnap.exists() ? friendSnap.val().nickname : friendId;
+        const div = document.createElement('div');
+        div.textContent = `${friendName} (${friendId})`;
+        div.onclick = () => openChat(friendId, friendName);
+        friendListDiv.appendChild(div);
+      }
+    });
+  }
 
-    // ---------- UI section switching helpers ----------
-    function showSection(id) {
-      ["landing","nicknamePage","successPage","loginPage","chatPage"].forEach(sid => {
-        const el = document.getElementById(sid);
-        if (el) el.style.display = sid === id ? "block" : "none";
+  window.openChat = (friendId, friendName) => {
+    currentChatFriend = friendId;
+    document.getElementById("chatWith").textContent = `${friendName} (${friendId})`;
+    document.getElementById("chatView").style.display = "block";
+    document.getElementById("friendList").style.display = "none";
+    document.getElementById("chatMessages").innerHTML = "";
+    listenMessages();
+  };
+
+  window.backToFriendList = () => {
+    currentChatFriend = "";
+    document.getElementById("chatView").style.display = "none";
+    document.getElementById("friendList").style.display = "block";
+  };
+
+  function listenMessages() {
+    if (messagesListener) { off(ref(db, 'messages/' + currentUserId + '_' + currentChatFriend)); messagesListener = null; }
+    const messagesRef1 = ref(db, 'messages/' + currentUserId + '_' + currentChatFriend);
+    const messagesRef2 = ref(db, 'messages/' + currentChatFriend + '_' + currentUserId);
+    let combinedMessages = {};
+    const updateMessages = () => {
+      const chatMessagesDiv = document.getElementById("chatMessages");
+      chatMessagesDiv.innerHTML = "";
+      const sortedKeys = Object.keys(combinedMessages).sort((a,b) => combinedMessages[a].timestamp - combinedMessages[b].timestamp);
+      sortedKeys.forEach(key => {
+        const msg = combinedMessages[key];
+        const div = document.createElement("div");
+        div.textContent = msg.message;
+        div.className = msg.sender === currentUserId ? "me" : "friend";
+        chatMessagesDiv.appendChild(div);
       });
-    }
-    window.showLanding = () => showSection("landing");
-    window.showNicknamePage = () => {
-      showSection("nicknamePage");
-      document.getElementById("nicknameInput").value = "";
-      document.getElementById("loading").style.display = "none";
-      document.getElementById("generatedDetails").style.display = "none";
-      document.getElementById("generatedId").value = "";
-      const pass = document.getElementById("createPassword");
-      if (pass) pass.value = "";
+      chatMessagesDiv.scrollTop = chatMessagesDiv.scrollHeight;
     };
-    window.showLoginPage = () => {
-      showSection("loginPage");
-      document.getElementById("loginId").value = "";
-      document.getElementById("loginPassword").value = "";
-    };
+    messagesListener = onValue(messagesRef1, snapshot => {
+      const msgs = snapshot.val() || {};
+      combinedMessages = {...combinedMessages, ...msgs};
+      updateMessages();
+    });
+    onValue(messagesRef2, snapshot => {
+      const msgs = snapshot.val() || {};
+      combinedMessages = {...combinedMessages, ...msgs};
+      updateMessages();
+    });
+  }
 
-    // ---------- User account functions ----------
-    window.generateUserId = () => {
-      const nickname = document.getElementById("nicknameInput").value.trim();
-      if (!nickname) return alert("Please enter your nickname");
-      document.getElementById("loading").style.display = "block";
-      const firstLetter = nickname[0].toLowerCase();
-      const generateId = () => firstLetter + Math.floor(100 + Math.random() * 900);
-      const checkAndGenerateUniqueId = async () => {
-        let id = generateId();
-        let snap = await get(ref(db, "users/" + id));
-        while (snap.exists()) {
-          id = generateId();
-          snap = await get(ref(db, "users/" + id));
-        }
-        return id;
-      };
-      checkAndGenerateUniqueId().then(id => {
-        setTimeout(() => {
-          document.getElementById("loading").style.display = "none";
-          document.getElementById("generatedDetails").style.display = "block";
-          document.getElementById("generatedId").value = id;
-        }, 700);
-      });
-    };
+  window.sendMessage = async () => {
+    const msgInput = document.getElementById("messageInput");
+    const message = msgInput.value.trim();
+    if (!message) return;
+    const messagesRef = ref(db, 'messages/' + currentUserId + '_' + currentChatFriend);
+    const newMsgKey = push(messagesRef).key;
+    await update(ref(db, `messages/${currentUserId}_${currentChatFriend}/${newMsgKey}`), {
+      sender: currentUserId,
+      receiver: currentChatFriend,
+      message,
+      timestamp: Date.now()
+    });
+    msgInput.value = "";
+  };
 
-    window.finalizeAccount = async () => {
-      const id = document.getElementById("generatedId").value.trim();
-      const password = document.getElementById("createPassword").value;
-      const nickname = document.getElementById("nicknameInput").value.trim();
-      if (!password) return alert("Please enter a password");
-      const userRef = ref(db, "users/" + id);
-      const snap = await get(userRef);
-      if (snap.exists()) {
-        alert("ID already exists, try generating again");
-        return;
+  /* ----------------- CALLING / WebRTC functions ----------------- */
+
+  // create RTCPeerConnection and wire handlers
+  function createPeerConnection(targetId) {
+    pc = new RTCPeerConnection(pcConfig);
+
+    pc.ontrack = (event) => {
+      if (event.streams && event.streams[0]) {
+        const stream = event.streams[0];
+        try { remoteVideoEl.srcObject = stream; } catch(e){}
+        try { remoteAudioEl.srcObject = stream; } catch(e){}
       }
-      await set(userRef, { password, nickname });
-      showSection("successPage");
     };
 
-    window.loginUser = async () => {
-      const id = document.getElementById("loginId").value.trim();
-      const password = document.getElementById("loginPassword").value;
-      if (!id || !password) return alert("Enter ID and password");
-
-      const userRef = ref(db, "users/" + id);
-      const snap = await get(userRef);
-      if (!snap.exists()) return alert("User ID not found");
-
-      const userData = snap.val();
-      if (userData.password !== password) return alert("Password incorrect");
-
-      // set current user and show chat
-      currentUserId = id;
-      showSection("chatPage");
-      document.getElementById("friendList").style.display = "block";
-      document.getElementById("chatView").style.display = "none";
-      loadFriends();
-
-      // IMPORTANT: Attach permanent listeners after login (only once)
-      startIncomingListener();
-      startHangupListener();
+    pc.onicecandidate = (ev) => {
+      if (!ev.candidate) return;
+      const cand = ev.candidate.toJSON();
+      // push under candidates/<targetId>/<currentUserId>
+      push(ref(db, `candidates/${targetId}/${currentUserId}`), cand);
     };
 
-    window.toggleAddFriendSection = () => {
-      const sec = document.getElementById("addFriendSection");
-      sec.style.display = sec.style.display === "none" ? "block" : "none";
+    pc.onconnectionstatechange = () => {
+      console.log('pc state', pc.connectionState);
     };
 
-    window.addFriend = async () => {
-      const friendId = document.getElementById("searchFriendId").value.trim();
-      if (!friendId || friendId === currentUserId) return alert("Invalid Friend ID");
-      const friendRef = ref(db, "users/" + friendId);
-      const snap = await get(friendRef);
-      if (!snap.exists()) return alert("Friend not found");
-      await set(ref(db, `friends/${currentUserId}/${friendId}`), true);
-      await set(ref(db, `friends/${friendId}/${currentUserId}`), true);
-      alert("Friend added!");
-      document.getElementById("searchFriendId").value = "";
-      document.getElementById("addFriendSection").style.display = "none";
-      loadFriends();
-    };
+    return pc;
+  }
 
-    function loadFriends() {
-      if (!currentUserId) return;
-      const friendsRef = ref(db, `friends/${currentUserId}`);
-      if (friendsListener) { try { off(friendsRef, 'value', friendsListener); } catch(e){} friendsListener = null; }
-      friendsListener = onValue(friendsRef, async snapshot => {
-        const friendListDiv = document.getElementById("friendList");
-        friendListDiv.innerHTML = "";
-        const friends = snapshot.val();
-        if (!friends) {
-          friendListDiv.innerHTML = "<p>No friends yet. Add some!</p>";
-          return;
-        }
-        for (const friendId in friends) {
-          const friendSnap = await get(ref(db, `users/${friendId}`));
-          const friendName = friendSnap.exists() ? friendSnap.val().nickname : friendId;
-          const div = document.createElement("div");
-          div.textContent = `${friendName} (${friendId})`;
-          div.onclick = () => openChat(friendId, friendName);
-          friendListDiv.appendChild(div);
-        }
-      });
-    }
+  // listen for remote ICE candidates for calls targeted to me from a specific peer
+  function listenForRemoteCandidates(fromId) {
+    // candidates/<currentUserId>/<fromId>
+    if (remoteCandidatesRef) { off(remoteCandidatesRef); remoteCandidatesRef = null; }
+    remoteCandidatesRef = ref(db, `candidates/${currentUserId}/${fromId}`);
+    onChildAdded(remoteCandidatesRef, async (snap) => {
+      const cand = snap.val();
+      if (!cand || !pc) return;
+      try { await pc.addIceCandidate(cand); } catch(e){ console.warn('addIce err', e); }
+    });
+  }
 
-    window.openChat = (friendId, friendName) => {
-      currentChatFriend = friendId;
-      document.getElementById("chatWith").textContent = `${friendName} (${friendId})`;
-      document.getElementById("chatView").style.display = "block";
-      document.getElementById("friendList").style.display = "none";
-      document.getElementById("chatMessages").innerHTML = "";
-      listenMessages();
-    };
-
-    window.backToFriendList = () => {
-      currentChatFriend = "";
-      document.getElementById("chatView").style.display = "none";
-      document.getElementById("friendList").style.display = "block";
-    };
-
-    function listenMessages() {
-      if (!currentUserId || !currentChatFriend) return;
-      if (messagesListener) {
-        try {
-          off(ref(db, 'messages/' + currentUserId + '_' + currentChatFriend), 'value', messagesListener);
-          off(ref(db, 'messages/' + currentChatFriend + '_' + currentUserId), 'value', messagesListener);
-        } catch(e){}
-        messagesListener = null;
+  // helper to attach call status listener
+  function attachCallStatusListener(callId) {
+    if (!callId) return;
+    if (callStatusRef) { off(callStatusRef); callStatusRef = null; }
+    callStatusRef = ref(db, `calls/${callId}`);
+    onValue(callStatusRef, async (snap) => {
+      if (!snap.exists()) return;
+      const data = snap.val();
+      if (!data || !data.status) return;
+      if (data.status === 'ended') {
+        // remote ended or call ended — cleanup locally
+        await localCleanupAfterCall(false);
       }
-      const messagesRef1 = ref(db, 'messages/' + currentUserId + '_' + currentChatFriend);
-      const messagesRef2 = ref(db, 'messages/' + currentChatFriend + '_' + currentUserId);
-      let combinedMessages = {};
-      const updateMessages = () => {
-        const chatMessagesDiv = document.getElementById("chatMessages");
-        chatMessagesDiv.innerHTML = "";
-        const sortedKeys = Object.keys(combinedMessages).sort((a,b) => combinedMessages[a].timestamp - combinedMessages[b].timestamp);
-        sortedKeys.forEach(key => {
-          const msg = combinedMessages[key];
-          const div = document.createElement("div");
-          div.textContent = msg.message;
-          div.className = msg.sender === currentUserId ? "me" : "friend";
-          chatMessagesDiv.appendChild(div);
-        });
-        chatMessagesDiv.scrollTop = chatMessagesDiv.scrollHeight;
-      };
-      messagesListener = onValue(messagesRef1, snapshot => {
-        const msgs = snapshot.val() || {};
-        combinedMessages = {...combinedMessages, ...msgs};
-        updateMessages();
-      });
-      onValue(messagesRef2, snapshot => {
-        const msgs = snapshot.val() || {};
-        combinedMessages = {...combinedMessages, ...msgs};
-        updateMessages();
-      });
+    });
+  }
+
+  // caller starts a call
+  async function startCall(media) {
+    if (!currentUserId || !currentChatFriend) return alert('Select a friend first');
+    callType = media;
+
+    try {
+      if (media === 'audio') localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+      else localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
+    } catch (e) {
+      return alert('Permission required: ' + e.message);
     }
 
-    window.sendMessage = async () => {
-      const msgInput = document.getElementById("messageInput");
-      const message = msgInput.value.trim();
-      if (!message) return;
-      const messagesRef = ref(db, 'messages/' + currentUserId + '_' + currentChatFriend);
-      const newMsgKey = push(messagesRef).key;
-      await update(ref(db, `messages/${currentUserId}_${currentChatFriend}/${newMsgKey}`), {
-        sender: currentUserId,
-        receiver: currentChatFriend,
-        message,
-        timestamp: Date.now()
-      });
-      msgInput.value = "";
-    };
+    // show preview area
+    showPreviewArea(media);
 
-    // ---------- WebRTC helpers ----------
-    function createPeerConnection(targetId) {
-      cleanupLocalCandidatesRef();
-      pc = new RTCPeerConnection(pcConfig);
+    // create unique call id
+    const callId = `${Date.now()}_${currentUserId}_${currentChatFriend}`;
+    currentCallId = callId;
 
-      pc.ontrack = (event) => {
-        if (event.streams && event.streams[0]) {
-          const stream = event.streams[0];
-          try { remoteVideoEl.srcObject = stream; } catch(e){}
-        }
-      };
+    createPeerConnection(currentChatFriend);
+    localStream.getTracks().forEach(t => pc.addTrack(t, localStream));
 
-      pc.onicecandidate = (ev) => {
-        if (!ev.candidate) return;
-        const cand = ev.candidate.toJSON();
-        try { push(ref(db, `candidates/${targetId}/${currentUserId}`), cand); } catch(e){ console.warn('push cand err', e); }
-      };
+    const offer = await pc.createOffer();
+    await pc.setLocalDescription(offer);
 
-      pc.onconnectionstatechange = () => {
-        console.log('pc state', pc.connectionState);
-      };
+    // write incoming/<callee> and calls/<callId>
+    await set(ref(db, `incoming/${currentChatFriend}`), { from: currentUserId, sdp: offer.sdp, type: offer.type, media: media, timestamp: Date.now(), callId });
+    await set(ref(db, `calls/${callId}`), { caller: currentUserId, callee: currentChatFriend, status: 'ringing', timestamp: Date.now() });
 
-      return pc;
-    }
-
-    function listenForRemoteCandidates(fromId) {
-      cleanupRemoteCandidatesRef();
-      remoteCandidatesRef = ref(db, `candidates/${currentUserId}/${fromId}`);
-      onChildAdded(remoteCandidatesRef, async (snap) => {
-        const cand = snap.val();
-        if (!cand || !pc) return;
-        try { await pc.addIceCandidate(cand); } catch(e){ console.warn('addIce err', e); }
-      });
-    }
-
-    function cleanupRemoteCandidatesRef() {
-      if (remoteCandidatesRef) {
-        try { off(remoteCandidatesRef); } catch(e){}
-        remoteCandidatesRef = null;
+    // listen for answer
+    if (answerRef) { off(answerRef); answerRef = null; }
+    answerRef = ref(db, `answers/${currentUserId}/${currentChatFriend}`);
+    onValue(answerRef, async (snap) => {
+      if (!snap.exists()) return;
+      const ans = snap.val();
+      if (ans && ans.sdp) {
+        try { await pc.setRemoteDescription({ type: ans.type, sdp: ans.sdp }); } catch (e) { console.warn('setRemoteDesc error', e); }
       }
-    }
-    function cleanupLocalCandidatesRef() {
-      if (localCandidatesRef) {
-        try { off(localCandidatesRef); } catch(e){}
-        localCandidatesRef = null;
-      }
-    }
-
-    // send hangup signal to target (so remote can cleanup too)
-    async function sendHangup(toId) {
-      if (!toId || !currentUserId) return;
-      try { await set(ref(db, `hangup/${toId}/${currentUserId}`), { timestamp: Date.now() }); } catch(e){ console.warn('sendHangup err', e); }
-    }
-
-    // permanent hangup listener for me
-    function startHangupListener() {
-      if (!currentUserId) return;
-      if (hangupRef) { try { off(hangupRef); } catch(e){} hangupRef = null; }
-      hangupRef = ref(db, `hangup/${currentUserId}`);
-      onChildAdded(hangupRef, async (snap) => {
-        const fromId = snap.key;
-        console.log('hangup received from', fromId);
-        // remote hung up — cleanup our call state
-        await cleanupCall({ remote: true, fromId });
-        // remove the hangup node after handling
-        try { await remove(ref(db, `hangup/${currentUserId}/${fromId}`)); } catch(e){}
-      });
-    }
-    // PRIMARY cleanup for single-call state (DOES NOT remove permanent incomingRef/hangupRef)
-    async function cleanupCall(opts = {}) {
-      try {
-        if (pc) { try { pc.close(); } catch(e){} pc = null; }
-        if (localStream) { try { localStream.getTracks().forEach(t => t.stop()); } catch(e){} localStream = null; }
-
-        try {
-          callPreview.style.display = 'none';
-          hangupCallBtn.style.display = 'none';
-          callBar.style.display = 'flex';
-          incomingModal.style.display = 'none';
-        } catch(e){}
-
-        const partnerId = opts.fromId || currentChatFriend;
-
-        if (partnerId) {
-          // remove per-call db nodes (safe direction removals)
-          try { await remove(ref(db, `incoming/${partnerId}`)); } catch(e){}
-          try { await remove(ref(db, `answers/${currentUserId}/${partnerId}`)); } catch(e){}
-          try { await remove(ref(db, `answers/${partnerId}/${currentUserId}`)); } catch(e){}
-          try { await remove(ref(db, `candidates/${partnerId}/${currentUserId}`)); } catch(e){}
-          try { await remove(ref(db, `candidates/${currentUserId}/${partnerId}`)); } catch(e){}
-        }
-
-        if (answerRef) { try { off(answerRef); } catch(e){} answerRef = null; }
-        cleanupRemoteCandidatesRef();
-        cleanupLocalCandidatesRef();
-
-        if (!opts.remote && partnerId) {
-          try { await sendHangup(partnerId); } catch(e){}
-        }
-      } catch (e) {
-        console.warn('cleanupCall error', e);
-      }
-    }
-
-    // start an outgoing call (media = 'audio' or 'video')
-    async function startCall(media) {
-      if (!currentUserId || !currentChatFriend) return alert('Select a friend first');
-      callType = media;
-      await cleanupCall(); // clear any residual per-call state
-
-      try {
-        if (media === 'audio') localStream = await navigator.mediaDevices.getUserMedia({ audio:true, video:false });
-        else localStream = await navigator.mediaDevices.getUserMedia({ audio:true, video:true });
-      } catch (e) {
-        return alert('Permission required: ' + e.message);
-      }
-
-      showPreviewArea(media);
-
-      createPeerConnection(currentChatFriend);
-      if (localStream) {
-        try { localStream.getTracks().forEach(t => pc.addTrack(t, localStream)); } catch(e){}
-        if (media === 'video') try { localVideoEl.srcObject = localStream; } catch(e){}
-      }
-
-      try {
-        const offer = await pc.createOffer();
-        await pc.setLocalDescription(offer);
-
-        // write offer to incoming/{target}
-        await set(ref(db, `incoming/${currentChatFriend}`), { from: currentUserId, sdp: offer.sdp, type: offer.type, media: media, timestamp: Date.now() });
-
-        // listen for answer on answers/{me}/{target}
-        if (answerRef) { try { off(answerRef); } catch(e){} answerRef = null; }
-        answerRef = ref(db, `answers/${currentUserId}/${currentChatFriend}`);
-        onValue(answerRef, async (snap) => {
-          if (!snap.exists()) return;
-          const ans = snap.val();
-          if (ans && ans.sdp) {
-            try { await pc.setRemoteDescription({ type: ans.type, sdp: ans.sdp }); } catch(e){ console.warn('setRemoteDesc error', e); }
-          }
-        });
-
-        // listen for remote ICE candidates
-        listenForRemoteCandidates(currentChatFriend);
-
-        hangupCallBtn.style.display = 'flex';
-        callBar.style.display = 'none';
-      } catch (e) {
-        console.warn('startCall error', e);
-        await cleanupCall();
-        alert('Failed to start call: ' + e.message);
-      }
-    }
-
-    // permanent incoming listener (attach once after login and never remove)
-    function startIncomingListener() {
-      if (!currentUserId) return;
-      if (incomingRef) { try { off(incomingRef); } catch(e){} incomingRef = null; }
-      incomingRef = ref(db, `incoming/${currentUserId}`);
-
-      onValue(incomingRef, async (snap) => {
-        if (!snap.exists()) { incomingModal.style.display = 'none'; return; }
-        const offer = snap.val();
-        if (!offer || !offer.from) return;
-
-        // show Accept/Reject UI
-        const callerId = offer.from;
-        const callerSnap = await get(ref(db, `users/${callerId}`));
-        const callerName = callerSnap.exists() ? callerSnap.val().nickname : callerId;
-        incomingText.innerText = `Incoming ${offer.media || 'audio'} call from ${callerName} (${callerId})`;
-        incomingModal.style.display = 'block';
-
-        // configure accept handler for this offer
-        acceptCallBtn.onclick = async () => {
-          incomingModal.style.display = 'none';
-          callType = offer.media || 'audio';
-
-          // clear previous per-call state but DO NOT remove incomingRef
-          await cleanupCall();
-
-          // get media
-          try {
-            if (callType === 'audio') localStream = await navigator.mediaDevices.getUserMedia({ audio:true, video:false });
-            else localStream = await navigator.mediaDevices.getUserMedia({ audio:true, video:true });
-          } catch (e) {
-            alert('Need mic/cam permission to answer: ' + e.message);
-            try { await remove(ref(db, `incoming/${currentUserId}`)); } catch(e){}
-            return;
-          }
-
-          showPreviewArea(callType);
-
-          // create pc as callee
-          createPeerConnection(callerId);
-          if (localStream) {
-            try { localStream.getTracks().forEach(t => pc.addTrack(t, localStream)); } catch(e){}
-            if (callType === 'video') try { localVideoEl.srcObject = localStream; } catch(e){}
-          }
-
-          // set remote desc from caller's offer
-          try { await pc.setRemoteDescription({ type: offer.type, sdp: offer.sdp }); } catch(e) { console.warn('setRemoteDesc on callee error', e); }
-
-          // create and send answer to answers/{caller}/{me}
-          try {
-            const answer = await pc.createAnswer();
-            await pc.setLocalDescription(answer);
-            await set(ref(db, `answers/${callerId}/${currentUserId}`), { sdp: answer.sdp, type: answer.type, timestamp: Date.now() });
-          } catch (e) { console.warn('createAnswer err', e); }
-
-          // listen for candidates from caller
-          listenForRemoteCandidates(callerId);
-
-          callBar.style.display = 'none';
-          hangupCallBtn.style.display = 'flex';
-        };
-
-        // reject handler: remove incoming node so caller knows (caller may handle removal)
-        rejectCallBtn.onclick = async () => {
-          incomingModal.style.display = 'none';
-          try { await remove(ref(db, `incoming/${currentUserId}`)); } catch(e){}
-        };
-      });
-    }
-
-    function showPreviewArea(media) {
-      callPreview.style.display = 'block';
-      localVideoEl.style.display = 'none';
-      remoteVideoEl.style.display = 'none';
-      localVideoEl.srcObject = null;
-      remoteVideoEl.srcObject = null;
-
-      if (media === 'video') {
-        localVideoEl.style.display = 'inline-block';
-        remoteVideoEl.style.display = 'inline-block';
-        if (localStream) localVideoEl.srcObject = localStream;
-      } else {
-        // audio-only: we still show preview area but with audio tracks (video elements hidden)
-        localVideoEl.style.display = 'none';
-        remoteVideoEl.style.display = 'none';
-      }
-      hangupCallBtn.style.display = 'flex';
-    }
-
-    async function hangupCall() {
-      const target = currentChatFriend;
-      await sendHangup(target);
-      await cleanupCall();
-    }
-
-    // expose cleanupCall to window (optional)
-    window.cleanupCall = cleanupCall;
-
-    // bind UI actions
-    audioCallHalf.onclick = () => {
-      if (!currentChatFriend) return alert('Open a chat with a friend first');
-      startCall('audio');
-    };
-    videoCallHalf.onclick = () => {
-      if (!currentChatFriend) return alert('Open a chat with a friend first');
-      startCall('video');
-    };
-    hangupCallBtn.onclick = () => hangupCall();
-
-    // ensure pc closed on page unload
-    window.addEventListener('beforeunload', () => { try { if (pc) pc.close(); } catch(e){} });
-
-    // small typing effect
-    showSection("landing");
-    window.addEventListener("DOMContentLoaded", () => {
-      const text = "OnlineWebChat";
-      const target = document.getElementById("typingHeading");
-      let index = 0;
-      function typeChar() {
-        if (index < text.length) {
-          target.textContent += text.charAt(index);
-          index++;
-          setTimeout(typeChar, 120);
-        }
-      }
-      typeChar();
     });
 
-  </script>
+    // listen for remote candidates
+    listenForRemoteCandidates(currentChatFriend);
+
+    // listen for call status changes
+    attachCallStatusListener(callId);
+
+    // UI
+    hangupCallBtn.style.display = 'flex';
+    callBar.style.display = 'none';
+  }
+
+  // incoming listener stays attached after login; do not detach on hangup
+  function startIncomingListener() {
+    if (!currentUserId) return;
+    if (incomingRef) { off(incomingRef); incomingRef = null; }
+    incomingRef = ref(db, `incoming/${currentUserId}`);
+    onValue(incomingRef, async (snap) => {
+      if (!snap.exists()) {
+        incomingModal.style.display = 'none';
+        return;
+      }
+      const offer = snap.val();
+      if (!offer || !offer.from) return;
+
+      // if already in a call, auto-reject by removing that incoming (so caller gets cleared)
+      if (currentCallId) {
+        try { await remove(ref(db, `incoming/${currentUserId}`)); } catch(e){}
+        return;
+      }
+
+      // show incoming modal with caller info
+      const callerId = offer.from;
+      const callerSnap = await get(ref(db, `users/${callerId}`));
+      const callerName = callerSnap.exists() ? callerSnap.val().nickname : callerId;
+      incomingText.innerText = `Incoming ${offer.media || 'audio'} call from ${callerName} (${callerId})`;
+      incomingModal.style.display = 'block';
+
+      // accept
+      acceptCallBtn.onclick = async () => {
+        incomingModal.style.display = 'none';
+        callType = offer.media || 'audio';
+        currentCallId = offer.callId || `${Date.now()}_${callerId}_${currentUserId}`;
+
+        try {
+          if (callType === 'audio') localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+          else localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
+        } catch (e) {
+          alert('Need mic/cam permission to answer: ' + e.message);
+          await remove(ref(db, `incoming/${currentUserId}`));
+          return;
+        }
+
+        // preview
+        showPreviewArea(callType);
+
+        // create pc and add local
+        createPeerConnection(callerId);
+        localStream.getTracks().forEach(t => pc.addTrack(t, localStream));
+
+        // set remote desc from offer
+        try { await pc.setRemoteDescription({ type: offer.type, sdp: offer.sdp }); } catch (e) { console.warn('setRemoteDesc on callee error', e); }
+
+        // create answer and write to answers/<caller>/<callee>
+        const answer = await pc.createAnswer();
+        await pc.setLocalDescription(answer);
+        await set(ref(db, `answers/${callerId}/${currentUserId}`), { sdp: answer.sdp, type: answer.type, timestamp: Date.now(), callId: currentCallId });
+
+        // update call status to connected
+        try { await update(ref(db, `calls/${currentCallId}`), { status: 'connected' }); } catch(e){ /* ignore */ }
+
+        // listen for candidates from caller
+        listenForRemoteCandidates(callerId);
+
+        // attach call status listener
+        attachCallStatusListener(currentCallId);
+
+        // UI adjustments
+        callBar.style.display = 'none';
+        hangupCallBtn.style.display = 'flex';
+        document.getElementById('chatView').style.display = 'block';
+      };
+
+      // reject
+      rejectCallBtn.onclick = async () => {
+        incomingModal.style.display = 'none';
+        try { await remove(ref(db, `incoming/${currentUserId}`)); } catch(e){}
+      };
+    });
+  }
+
+  // show preview area UI
+  function showPreviewArea(media) {
+    callPreview.style.display = 'block';
+    localVideoEl.style.display = 'none';
+    remoteVideoEl.style.display = 'none';
+    localAudioEl.style.display = 'none';
+    remoteAudioEl.style.display = 'none';
+    localVideoEl.srcObject = null;
+    remoteVideoEl.srcObject = null;
+    localAudioEl.srcObject = null;
+    remoteAudioEl.srcObject = null;
+
+    if (media === 'video') {
+      localVideoEl.style.display = 'inline-block';
+      remoteVideoEl.style.display = 'inline-block';
+      if (localStream) localVideoEl.srcObject = localStream;
+    } else {
+      localAudioEl.style.display = 'block';
+      remoteAudioEl.style.display = 'block';
+      if (localStream) localAudioEl.srcObject = localStream;
+    }
+  }
+
+  // local cleanup after call ended (flag writes to DB done elsewhere)
+  async function localCleanupAfterCall(removeSignaling/*true if this side should attempt to remove signaling nodes*/) {
+    // close pc and stop tracks
+    if (pc) { try { pc.close(); } catch(e){} pc = null; }
+    if (localStream) { localStream.getTracks().forEach(t => t.stop()); localStream = null; }
+    // UI reset
+    callPreview.style.display = 'none';
+    hangupCallBtn.style.display = 'none';
+    callBar.style.display = 'flex';
+    // detach per-call listeners
+    if (answerRef) { off(answerRef); answerRef = null; }
+    if (remoteCandidatesRef) { off(remoteCandidatesRef); remoteCandidatesRef = null; }
+    if (callStatusRef) { off(callStatusRef); callStatusRef = null; }
+    // optionally remove signaling nodes (incoming/answers) to clean DB if requested
+    if (removeSignaling && currentCallId) {
+      try { await remove(ref(db, `calls/${currentCallId}`)); } catch(e){}
+      try { await remove(ref(db, `incoming/${currentChatFriend}`)); } catch(e){}
+      try { await remove(ref(db, `answers/${currentUserId}/${currentChatFriend}`)); } catch(e){}
+      try { await remove(ref(db, `answers/${currentChatFriend}/${currentUserId}`)); } catch(e){}
+      // remove candidate children optionally (not required)
+    }
+    // clear call id after cleanup
+    currentCallId = null;
+  }
+
+  // hangup (user pressed hang button) -> announce ended and cleanup locally
+  async function hangupCall() {
+    // if we have a callId, mark call as ended so both sides receive it
+    if (currentCallId) {
+      try { await update(ref(db, `calls/${currentCallId}`), { status: 'ended' }); } catch(e){}
+    }
+    // Also remove incoming node for the other side if caller created it
+    if (currentChatFriend) {
+      try { await remove(ref(db, `incoming/${currentChatFriend}`)); } catch(e){}
+    }
+    // cleanup locally and remove signaling nodes for tidiness
+    await localCleanupAfterCall(true);
+  }
+
+  // hook UI buttons
+  audioCallHalf.onclick = () => startCall('audio');
+  videoCallHalf.onclick = () => startCall('video');
+  hangupCallBtn.onclick = () => hangupCall();
+
+  // ensure incoming listener remains attached after login; don't remove it during calls
+  // note: startIncomingListener() is called from loginUser()
+
+  // cleanup on leaving page
+  window.addEventListener('beforeunload', async () => {
+    try { if (pc) pc.close(); } catch(e){}
+    // If leaving while in a call, mark call ended to notify peer
+    if (currentCallId) {
+      try { await update(ref(db, `calls/${currentCallId}`), { status: 'ended' }); } catch(e){}
+    }
+  });
+
+  // initial UI
+  showLanding();
+
+  // typing effect
+  window.addEventListener("DOMContentLoaded", () => {
+    const text = "OnlineWebChat";
+    const target = document.getElementById("typingHeading");
+    let index = 0;
+    function typeChar() {
+      if (index < text.length) {
+        target.textContent += text.charAt(index);
+        index++;
+        setTimeout(typeChar, 150);
+      }
+    }
+    typeChar();
+  });
+</script>
 </body>
 </html>
-    
